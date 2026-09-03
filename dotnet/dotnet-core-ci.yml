@@ -10,7 +10,7 @@ parameters:
     default: ''
   - name: runTests
     type: boolean
-    default: false
+    default: true
   - name: poolName
     type: string
     default: 'Default'
@@ -18,7 +18,7 @@ parameters:
 
 stages:
   - stage: BuildAndPublish
-    displayName: 'Build and Validate'
+    displayName: 'Build and Publish'
     jobs:
       - job: Build
         pool:
