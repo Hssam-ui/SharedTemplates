@@ -38,7 +38,7 @@ stages:
 
           - ${{if eq(parameters.runTests, true)}}:
             - script:
-                dotnet test --configuration ${{ parameters.buildConfiguration }} --no-build --logger trx
+                dotnet test **/*Tests*.csproj --configuration ${{ parameters.buildConfiguration }} --no-build --logger trx
               displayName: 'Run tests'
             - task: publishTestResults@2
               displayName: 'Publish Test Results'
