@@ -1,0 +1,74 @@
+parameters:
+  - name: dotNetVersion
+    type: string
+    default: '9.x'
+  - name: buildConfiguration
+    type: string
+    default: 'Release'
+  - name: projectPath
+    type: string
+    default: ''
+  - name: runTests
+    type: boolean
+    default: false
+  - name: poolName
+    type: string
+    default: 'Default'
+
+
+stages:
+  - stage: Build
+    displayName: 'Build and Validate'
+    jobs:
+      - job: Build
+        pool:
+          name: ${{ parameters.poolName }}
+        steps:
+          - task: UseDotNet@2
+            displayName: 'install .NET SDK ${{ parameters.dotNetVersion }}'
+            inputs:
+              packageType: 'sdk'
+              version: ${{ parameters.dotNetVersion }}
+          - script: 
+                dotnet restore ${{ parameters.projectPath }}
+            displayName: 'Restore dependencies'
+          - script: 
+                dotnet build ${{ parameters.projectPath }} --configuration ${{ parameters.buildConfiguration }} --no-restore
+            displayName: 'Build project'
+
+          - ${{if eq(parameters.runTests, true)}}:
+            - script:
+                dotnet test --configuration $(buildConfiguration) --no-build --logger trx
+              displayName: 'Run tests'
+            - task: publishTestResults@2
+              displayName: 'Publish Test Results'
+              inputs:
+                testResultsFormat: 'VSTest'
+                testResultsFiles: '**/*.trx'
+  - stage: Publish
+    displayName: 'Publish'
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - job: Publish
+        pool:
+          name: ${{ parameters.poolName }}
+        steps:
+          - task: UseDotNet@2
+            displayName: 'install .NET SDK ${{ parameters.dotNetVersion }}'
+            inputs:
+              packageType: 'sdk'
+              version: ${{ parameters.dotNetVersion }}
+          - script: 
+                dotnet publish ${{ parameters.projectPath }} --configuration ${{ parameters.buildConfiguration }} --no-build --output $(Build.ArtifactStagingDirectory)/app
+            displayName: 'Publish project'
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Artifact'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: "production-deployment-package"
+              publishLocation: "Container"        
+
+
+            
+
