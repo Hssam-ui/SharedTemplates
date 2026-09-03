@@ -38,10 +38,10 @@ stages:
 
           - ${{if eq(parameters.runTests, true)}}:
             - script:
-                dotnet test **/*Tests.Unit.csproj --configuration ${{ parameters.buildConfiguration }} --no-build --logger trx
+                dotnet test $(Build.SourcesDirectory)/*Tests.Unit.csproj --configuration ${{ parameters.buildConfiguration }} --no-build --logger trx
               displayName: 'Run unit tests'
             - script:
-                dotnet test **/*Tests.Integration.csproj --configuration ${{ parameters.buildConfiguration }} --no-build --logger trx
+                dotnet test $(Build.SourcesDirectory)/*Tests.Integration.csproj --configuration ${{ parameters.buildConfiguration }} --no-build --logger trx
               displayName: 'Run integration tests'
             - task: publishTestResults@2
               displayName: 'Publish Test Results'
