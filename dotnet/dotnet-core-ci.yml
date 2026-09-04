@@ -66,14 +66,15 @@ stages:
               inputs:
                 testResultsFormat: 'VSTest'
                 testResultsFiles: '**/*.trx'
-            - task: docker@2
-              displayName: 'Stop and remove existing testcontainer'
+            - task: bash@3
               condition: always()
               continueOnError: true
               inputs:
-                command: 'custom'
-                customCommand: 'ps -a --filter "label=org.testcontainer=true" --format "{{.ID}}" | xargs -r docker stop | xargs -r docker rm'
-
+                targetType: 'inline'
+                script: |
+                  echo "Stopping and removing existing testcontainer..."
+                  docker ps -a --filter "label=org.testcontainer=true" --format "{{.ID}}" | xargs -r docker stop | xargs -r docker rm
+              displayName: 'Stop and remove existing testcontainer'
 
           - script: 
                 dotnet publish $(Build.SourcesDirectory)/${{ parameters.projectPath }} --configuration ${{ parameters.buildConfiguration }} --no-build --output $(Build.ArtifactStagingDirectory)/app
