@@ -66,6 +66,13 @@ stages:
               inputs:
                 testResultsFormat: 'VSTest'
                 testResultsFiles: '**/*.trx'
+            - task: docker@2
+              displayName: 'Stop and remove existing testcontainer'
+              condition: always()
+              continueOnError: true
+              inputs:
+                command: 'custom'
+                customCommand: 'ps -a --filter "label=org.testcontainer=true" --format "{{.ID}}" | xargs -r docker stop | xargs -r docker rm'
 
 
           - script: 
