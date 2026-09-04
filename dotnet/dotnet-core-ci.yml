@@ -57,17 +57,20 @@ stages:
               displayName: 'Run unit tests'
               inputs:
                 command: 'test'
-                projects: '$(Build.SourcesDirectory)/${{ parameters.unitTestProjectPath }}/ProductManagement.Tests.Unit.csproj'
+                projects: 'ProductManagement.Tests.Unit.csproj'
                 arguments: '--configuration ${{ parameters.buildConfiguration }} --no-build --logger trx'
                 publishTestResults: true
+                workingDirectory: '$(Build.SourcesDirectory)/${{ parameters.unitTestProjectPath }}'
             - task: DotNetCoreCLI@2
               displayName: 'Run integration tests'
+              condition: succeededOrFailed()
               inputs:
                 command: 'test'
-                projects: '$(Build.SourcesDirectory)/${{ parameters.integrationTestProjectPath }}/ProductManagement.Tests.Integration.csproj'
+                projects: 'ProductManagement.Tests.Integration.csproj'
                 arguments: '--configuration ${{ parameters.buildConfiguration }} --no-build --logger trx'
                 publishTestResults: true
-                
+                workingDirectory: '$(Build.SourcesDirectory)/${{ parameters.integrationTestProjectPath }}'  
+
             - task: publishTestResults@2
               displayName: 'Publish Test Results'
               inputs:
