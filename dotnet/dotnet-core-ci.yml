@@ -48,7 +48,7 @@ stages:
               inputs:
                 command: 'test'
                 projects: '$(Build.SourcesDirectory)/${{ parameters.unitTestProjectPath }}/ProductManagement.Tests.Unit.csproj'
-                arguments: '--configuration ${{ parameters.buildConfiguration }} --logger trx --blame-minus-force'
+                arguments: '--configuration ${{ parameters.buildConfiguration }} --logger trx --blame-crash'
                 publishTestResults: true
                 workingDirectory: '$(Build.SourcesDirectory)/${{ parameters.unitTestProjectPath }}'
             - task: DotNetCoreCLI@2
@@ -57,7 +57,7 @@ stages:
               inputs:
                 command: 'test'
                 projects: '$(Build.SourcesDirectory)/${{ parameters.integrationTestProjectPath }}/ProductManagement.Tests.Integration.csproj'
-                arguments: '--configuration ${{ parameters.buildConfiguration }} --logger trx --blame-minus-force'
+                arguments: '--configuration ${{ parameters.buildConfiguration }} --logger trx --blame-crash'
                 publishTestResults: true
                 workingDirectory: '$(Build.SourcesDirectory)/${{ parameters.integrationTestProjectPath }}'  
 
