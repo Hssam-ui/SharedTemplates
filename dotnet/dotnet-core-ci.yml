@@ -43,22 +43,12 @@ stages:
             displayName: 'Build project'
 
           - ${{if eq(parameters.runTests, true)}}:
-            # - script: |
-            #     echo "===Running unit tests..."
-                
-            #     dotnet test "$(Build.SourcesDirectory)/${{ parameters.unitTestProjectPath }}/ProductManagement.Tests.Unit.csproj" --configuration ${{ parameters.buildConfiguration }} --no-build --logger trx             
-            #   displayName: 'Run unit tests'
-            # - script: |
-            #     echo "===Running integration tests..."
-                
-            #     dotnet test "$(Build.SourcesDirectory)/${{ parameters.integrationTestProjectPath }}/ProductManagement.Tests.Integration.csproj" --configuration ${{ parameters.buildConfiguration }} --no-build --logger trx
-            #   displayName: 'Run integration tests'
             - task: DotNetCoreCLI@2
               displayName: 'Run unit tests'
               inputs:
                 command: 'test'
                 projects: '$(Build.SourcesDirectory)/${{ parameters.unitTestProjectPath }}/ProductManagement.Tests.Unit.csproj'
-                arguments: '--configuration ${{ parameters.buildConfiguration }} --logger trx'
+                arguments: '--configuration ${{ parameters.buildConfiguration }} --logger trx --blame-crash'
                 publishTestResults: true
                 workingDirectory: '$(Build.SourcesDirectory)/${{ parameters.unitTestProjectPath }}'
             - task: DotNetCoreCLI@2
@@ -67,7 +57,7 @@ stages:
               inputs:
                 command: 'test'
                 projects: '$(Build.SourcesDirectory)/${{ parameters.integrationTestProjectPath }}/ProductManagement.Tests.Integration.csproj'
-                arguments: '--configuration ${{ parameters.buildConfiguration }} --logger trx'
+                arguments: '--configuration ${{ parameters.buildConfiguration }} --logger trx --blame-crash'
                 publishTestResults: true
                 workingDirectory: '$(Build.SourcesDirectory)/${{ parameters.integrationTestProjectPath }}'  
 
@@ -76,7 +66,15 @@ stages:
               inputs:
                 testResultsFormat: 'VSTest'
                 testResultsFiles: '**/*.trx'
-
+            - task: bash@3
+              condition: always()
+              continueOnError: true
+              inputs:
+                targetType: 'inline'
+                script: |
+                  echo "Stopping and removing existing testcontainer..."
+                  docker ps -a --filter "label=org.testcontainer=true" --format "{{.ID}}" | xargs -r docker stop | xargs -r docker rm
+              displayName: 'Stop and remove existing testcontainer'
 
           - script: 
                 dotnet publish $(Build.SourcesDirectory)/${{ parameters.projectPath }} --configuration ${{ parameters.buildConfiguration }} --no-build --output $(Build.ArtifactStagingDirectory)/app
