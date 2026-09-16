@@ -32,23 +32,23 @@ stages:
     jobs:
       - job: Build
         steps:
-          -task: UsePythonVersion@0
+          - task: UsePythonVersion@0
+              inputs:
+                versionSpec: ${{ parameters.pythonVersion }}
+                addToPath: true
+            
+          - task: bash@3
+            displayName: 'Install Dependencies and Verify Code Syntax'
             inputs:
-              versionSpec: ${{ parameters.pythonVersion }}
-              addToPath: true
-          
-          -task: bash@3
-          displayName: 'Install Dependencies and Verify Code Syntax'
-          inputs:
-              targetType: 'inline'
-              script: |
-                echo "=== Step: Install Dependencies ==="
-                poetry config virtualenvs.in-project true
-                poetry install --no-root
-                echo "=== Step: Verify Code Syntax ==="
-                poetry run python3 -m compileall . -q
-                poetry run flake8 . 
-                poetry run black .          
+                targetType: 'inline'
+                script: |
+                  echo "=== Step: Install Dependencies ==="
+                  poetry config virtualenvs.in-project true
+                  poetry install --no-root
+                  echo "=== Step: Verify Code Syntax ==="
+                  poetry run python3 -m compileall . -q
+                  poetry run flake8 . 
+                  poetry run black .          
           
   - stage: Test
     condition: succeeded()
