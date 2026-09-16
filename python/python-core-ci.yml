@@ -23,14 +23,13 @@ parameters:
   - name: tag
     type: string
     default: ''
-  
-pool:
-  name: ${{ parameters.poolName }}
 
 stages:
   - stage: Build
     jobs:
       - job: Build
+        pool:
+          name: ${{ parameters.poolName }}
         steps:
           - task: UsePythonVersion@0
               inputs:
@@ -54,6 +53,8 @@ stages:
     condition: succeeded()
     jobs:
       - job: Test
+        pool:
+          name: ${{ parameters.poolName }}
         steps:
           - script: |
               echo "Placeholder: Insert your test commands here."
@@ -63,6 +64,8 @@ stages:
     condition: succeeded()
     jobs:
       - job: SecurityScan
+        pool:
+          name: ${{ parameters.poolName }}
         steps:
           - task: Bash@3
             displayName: 'Run Snyk Security Scan'
@@ -82,6 +85,8 @@ stages:
 
     jobs:
       - job: DockerBuildAndPush
+        pool:
+          name: ${{ parameters.poolName }}
         steps:
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
@@ -96,6 +101,8 @@ stages:
       - DockerBuildAndPush
     jobs:
       - job: Deploy
+        pool:
+          name: ${{ parameters.poolName }}
         steps:
           - script: |
               echo "Placeholder: Insert your deployment commands here."
