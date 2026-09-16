@@ -14,18 +14,13 @@ parameters:
   - name: imageRepository
     type: string
     default: ''
+  - name: dockerImageName
+    type: string
+    default: ''
   - name: tag
     type: string
     default: ''
   
-
-# variables:
-#   dockerRegistryServiceConnection: 'DockerHubConnection'
-#   imageRepository: 'hssammehdi/hssamhub'
-#   dockerfilePath: $(Build.SourcesDirectory)/Dockerfile
-#   tag: $(Build.BuildId)
-#   isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
-
 pool:
   name: ${{ parameters.poolName }}
 
@@ -34,19 +29,24 @@ stages:
     jobs:
       - job: Build
         steps:
-          - script: |
-              echo "=== Step: Install Dependencies ==="
-              poetry config virtualenvs.in-project true
-              poetry install --no-root
-              echo "=== Step: Verify Code Syntax ==="
-              # Compiles all .py files in your workspace to catch syntax errors immediately
-              poetry run python3 -m compileall . -q
-
-
-              poetry run flake8 . 
-
-              poetry run black .
-            displayName: 'Compile and Build Project'
+          -task: UsePythonVersion@0
+            inputs:
+              versionSpec: ${{ parameters.pythonVersion }}
+              addToPath: true
+          
+          -task: bash@3
+          displayName: 'Install Dependencies and Verify Code Syntax'
+          inputs:
+              targetType: 'inline'
+              script: |
+                echo "=== Step: Install Dependencies ==="
+                poetry config virtualenvs.in-project true
+                poetry install --no-root
+                echo "=== Step: Verify Code Syntax ==="
+                poetry run python3 -m compileall . -q
+                poetry run flake8 . 
+                poetry run black .          
+          
   - stage: Test
     condition: succeeded()
     jobs:
@@ -87,7 +87,7 @@ stages:
               repository: $(imageRepository)
               dockerfile: $(Build.SourcesDirectory)/Dockerfile
               tags: |
-                server-$(tag)
+                $(dockerImageName)-$(tag)
   - stage: Deploy
     dependsOn:
       - DockerBuildAndPush
