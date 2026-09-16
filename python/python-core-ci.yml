@@ -14,6 +14,9 @@ parameters:
   - name: imageRepository
     type: string
     default: ''
+  - name: buildDockerImage
+    type: boolean
+    default: true
   - name: dockerImageName
     type: string
     default: ''
@@ -71,7 +74,7 @@ stages:
                 snyk test --command=python3 --severity-threshold=high
 
   - stage: DockerBuildAndPush
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    condition: and(succeeded(), eq('${{ parameters.buildDockerImage }}', true))
     dependsOn:
       - Build
       - Test
