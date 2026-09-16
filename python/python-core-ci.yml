@@ -1,0 +1,103 @@
+parameters:
+  - name: pythonVersion
+    type: string
+    default: '3.14'
+  - name: projectPath
+    type: string
+    default: ''
+  - name: runTests
+    type: boolean
+    default: true
+  - name: poolName
+    type: string
+    default: 'Default'
+  - name: imageRepository
+    type: string
+    default: ''
+  - name: buildDockerImage
+    type: boolean
+    default: true
+  - name: dockerImageName
+    type: string
+    default: ''
+  - name: tag
+    type: string
+    default: ''
+  
+pool:
+  name: ${{ parameters.poolName }}
+
+stages:
+  - stage: Build
+    jobs:
+      - job: Build
+        steps:
+          - task: UsePythonVersion@0
+              inputs:
+                versionSpec: ${{ parameters.pythonVersion }}
+                addToPath: true
+            
+          - task: bash@3
+            displayName: 'Install Dependencies and Verify Code Syntax'
+            inputs:
+                targetType: 'inline'
+                script: |
+                  echo "=== Step: Install Dependencies ==="
+                  poetry config virtualenvs.in-project true
+                  poetry install --no-root
+                  echo "=== Step: Verify Code Syntax ==="
+                  poetry run python3 -m compileall . -q
+                  poetry run flake8 . 
+                  poetry run black .          
+          
+  - stage: Test
+    condition: succeeded()
+    jobs:
+      - job: Test
+        steps:
+          - script: |
+              echo "Placeholder: Insert your test commands here."
+            displayName: 'Run Unit Tests'
+
+  - stage: SecurityScan
+    condition: succeeded()
+    jobs:
+      - job: SecurityScan
+        steps:
+          - task: Bash@3
+            displayName: 'Run Snyk Security Scan'
+            env:
+              SNYK_TOKEN: $(SNYK_TOKEN)
+            inputs:
+              targetType: 'inline'
+              script: |
+                snyk test --command=python3 --severity-threshold=high
+
+  - stage: DockerBuildAndPush
+    condition: and(succeeded(), eq('${{ parameters.buildDockerImage }}', true))
+    dependsOn:
+      - Build
+      - Test
+      - SecurityScan
+
+    jobs:
+      - job: DockerBuildAndPush
+        steps:
+          - task: Docker@2
+            displayName: 'Build and Push Docker Image'
+            inputs:
+              command: 'buildAndPush'
+              repository: $(imageRepository)
+              dockerfile: $(Build.SourcesDirectory)/Dockerfile
+              tags: |
+                $(dockerImageName)-$(tag)
+  - stage: Deploy
+    dependsOn:
+      - DockerBuildAndPush
+    jobs:
+      - job: Deploy
+        steps:
+          - script: |
+              echo "Placeholder: Insert your deployment commands here."
+              echo "Example: kubectl apply, ansible-playbook, or terraform apply"
+            displayName: 'Deploy Application'
