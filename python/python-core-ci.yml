@@ -31,10 +31,10 @@ stages:
         pool:
           name: ${{ parameters.poolName }}
         steps:
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: ${{ parameters.pythonVersion }}
-              addToPath: true
+          # - task: UsePythonVersion@0
+          #   inputs:
+          #     versionSpec: ${{ parameters.pythonVersion }}
+          #     addToPath: true
             
           - task: bash@3
             displayName: 'Install Dependencies and Verify Code Syntax'
